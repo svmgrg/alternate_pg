@@ -1,0 +1,33 @@
+git+https://github.com/andnp/PyFixedReps@0.4#egg=PyFixedReps
+numpy>=1.19.5
+numba>=0.52.0
+scipy>=1.5.4
+gym>=0.18.0
+git+https://git@github.com/andnp/RlGlue@0.3#egg=RlGlue
+git+https://git@github.com/andnp/PyRlEnvs@0.23#egg=PyRlEnvs
+
+module load python/3.8.5
+virtualenv --no-download ANDY_STUFF
+source ANDY_STUFF/bin/activate
+pip install --no-index --upgrade pip
+pip install -r requirements.txt
+deactivate
+
+(ANDY_STUFF) sgarg2@nia-login03:~$ pip freeze
+cloudpickle==2.0.0
+gym==0.20.0
+llvmlite==0.37.0
+numba==0.54.0
+numpy==1.20.3
+PyFixedReps @ git+https://github.com/andnp/PyFixedReps@cc8d819a03907d2b9a9928754d9d02ba97e8c43d
+PyRlEnvs @ git+https://git@github.com/andnp/PyRlEnvs@ccde020f7275d4d7d6e697c07c88a599bcff3398
+RlGlue @ git+https://git@github.com/andnp/RlGlue@58c4aad40f5ecc40ae4ae6c3c619c3d0945b551d
+scipy==1.7.1
+
+module load python/3.8.5
+virtualenv --no-download $SLURM_TMPDIR/env
+source $SLURM_TMPDIR/env/bin/activate
+pip install --no-index --upgrade pip
+pip install -r requirements.txt
+module load NiaEnv/2019b
+module load gnu-parallel

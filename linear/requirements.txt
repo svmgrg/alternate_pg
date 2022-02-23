@@ -1,0 +1,7 @@
+git+https://github.com/andnp/PyFixedReps@0.4#egg=PyFixedReps
+numpy>=1.19.5
+numba>=0.52.0
+scipy>=1.5.4
+gym>=0.18.0
+git+https://git@github.com/andnp/RlGlue@0.3#egg=RlGlue
+git+https://git@github.com/andnp/PyRlEnvs@0.23#egg=PyRlEnvs

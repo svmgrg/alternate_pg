@@ -1,0 +1,47 @@
+#!/bin/bash
+# SLURM submission script for submitting multiple serial jobs on Niagara
+#
+# taken from here: https://github.com/sinaghiassian/OffpolicyAlgorithms/blob/master/Job/SubmitJobsTemplates.SL
+#
+#SBATCH --account=def-XXX
+#SBATCH --time=03:45:00
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=40
+#SBATCH --job-name DotReacher
+
+exp_config_list=('0,0,0')
+
+# [str(decimal.Decimal(2**i)) for i in range(-13, 6, 2)]
+policy_stepsize_list=(0.0001220703125 0.00048828125 0.001953125 0.0078125 0.03125 0.125 0.5 2 8 32)
+critic_stepsize_list=(0.01 0.05 0.1 0.5 1 2)
+
+num_runs=(5)
+seed_number_list=(0 1 2 3 4)
+
+num_total_timesteps=(50000)
+target_move_timestep=(0)
+hidden_layer_size=(10)
+episode_cutoff_length=(1000)
+
+module load NiaEnv/2019b
+module load gnu-parallel
+module load python/3.6
+source ~/TORCH/bin/activate
+
+cd $SLURM_SUBMIT_DIR || exit
+export OMP_NUM_THREADS=1
+
+echo "Current working directory is $(pwd)"
+echo "Running on hostname $(hostname)"
+echo "Starting run at: $(date)"
+
+HOSTS=$(scontrol show hostnames $SLURM_NODELIST | tr '\n' ,)
+NCORES=$(($SLURM_NNODES * $SLURM_NTASKS_PER_NODE))
+
+parallel --env OMP_NUM_THREADS,PATH,LD_LIBRARY_PATH --joblog slurm-$SLURM_JOBID.log -j $NCORES -S $HOSTS --wd $PWD \
+python online_ac.py ::: --exp_config ::: ${exp_config_list[@]} ::: --policy_stepsize ::: ${policy_stepsize_list[@]} ::: --critic_stepsize ::: ${critic_stepsize_list[@]} ::: --seed_number ::: ${seed_number_list[@]} ::: --num_runs ::: ${num_runs} ::: --num_total_timesteps ::: ${num_total_timesteps} --target_move_timestep ::: ${target_move_timestep} --hidden_layer_size ::: ${hidden_layer_size} ::: --episode_cutoff_length ::: ${episode_cutoff_length}
+
+echo "Your awesome experiments finished with exit code $? at: $(date)"
+
+# $ sbatch job_submit_acrobot.sh
+

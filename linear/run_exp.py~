@@ -1,0 +1,91 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import json
+import time
+import os
+import pdb
+
+from mdp_experiments import Agent, run_experiment
+from environments import P, r, pi, tabular_features, inverted_features, \
+    dependent_features, single_features, P_mess, r_mess
+from PyRlEnvs.domains.MountainCar import GymMountainCar, MountainCar
+from PyRlEnvs.domains.Acrobot import Acrobot
+
+tilecoder_mc = TileCoder({'tiles': 4, 'tilings': 8, 'dims': 2,
+                          'random_offset': True,
+                          'input_ranges': [(-1.2, 0.5),
+                                           (-0.07, 0.07)]})
+ma_vel1 = 4 * np.pi
+ma_vel2 = 9 * np.pi
+tilecoder_ac = TileCoder({'tiles': 4, 'tilings': 8, 'dims': 4,
+                          'random_offset': True,
+                          'input_ranges': [(-1, 1), (-1, 1), (-1, 1), (-1, 1),
+                                           (-ma_vel1, ma_vel1),
+                                           (-ma_vel2, ma_vel2)]})
+num_runs = 2
+num_episodes = 100
+
+policy_weight_init_left = 0
+policy_weight_init_right = 0
+value_weight_init = 0
+
+grad_bias = None
+grad_noise = None
+
+num_actions = 3
+gamma = 0.99
+episode_cutoff_length = 100
+
+stepsize_list = [2**i for i in range(-6, 2)]
+critic_stepsize_list = [2**i for i in range(-4, 2)]
+
+nstep = 'inf'
+
+FLAG_BASELINE = True
+
+# folder details
+folder_name = 'mdp_data_biased/linearChain__thetaInit_{}_{}__valueWeightInit_{}'\
+    '__numRuns_{}__numEpisodes_{}__startState_{}__rewardNoise_{}__gamma_{}'\
+    '__episodeCutoff_{}__gradBias_{}__gradNoise_{}'.format(
+        policy_weight_init_left, policy_weight_init_right, value_weight_init,
+        num_runs, num_episodes, start_state, reward_noise, gamma,
+        episode_cutoff_length, grad_bias, grad_noise)
+print(folder_name)
+
+# folder details
+os.makedirs(folder_name, exist_ok='True')
+
+#----------------------------------------------------------------------
+# Using a learned value function
+#----------------------------------------------------------------------
+FLAG_LEARN_VPI = True
+value_features = tabular_features
+for FLAG_PG_TYPE in ['regular', 'alternate']:
+    for policy_stepsize in stepsize_list:
+        for critic_stepsize in critic_stepsize_list:
+            dat = run_experiment(
+                env_name=env_name,
+                num_runs=num_runs, num_episodes=num_episodes,
+                P=P, r=r, start_state=start_state,
+                terminal_states=terminal_states,
+                num_actions=num_actions,
+                policy_features=policy_features,
+                value_features=value_features,
+                policy_stepsize=policy_stepsize,
+                critic_stepsize=critic_stepsize,
+                nstep=nstep, gamma=gamma,
+                FLAG_BASELINE=FLAG_BASELINE,
+                FLAG_LEARN_VPI=FLAG_LEARN_VPI,
+                FLAG_PG_TYPE=FLAG_PG_TYPE,
+                reward_noise=reward_noise, vpi_bias=0,
+                policy_weight_init_left=policy_weight_init_left,
+                policy_weight_init_right=policy_weight_init_right,
+                episode_cutoff_length=episode_cutoff_length,
+                value_weight_init=value_weight_init,
+                grad_bias=grad_bias, grad_noise=grad_noise)
+            filename='{}/pg_{}__pol_{}__val_{}__learnVpi_{}'.format(
+                folder_name, FLAG_PG_TYPE, policy_stepsize, critic_stepsize,
+                FLAG_LEARN_VPI)
+            with open(filename, 'w') as fp:
+                json.dump(dat, fp)
+    print('Learned Vpi', FLAG_PG_TYPE, time.time() - tic)
